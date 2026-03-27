@@ -15,7 +15,12 @@ export async function POST(
     return NextResponse.json({ message: "Invalid" }, { status: 400 });
 
   booking.status = "confirmed";
-  booking.paymentStatus = method === "cash" ? "cash" : "paid";
+booking.paymentStatus = method === "cash" ? "cash" : "paid";
+
+  const adminCommission = booking.fare * 0.10;
+  const partnerAmount = booking.fare - adminCommission;
+  booking.adminCommission = adminCommission;
+  booking.partnerAmount = partnerAmount;
   booking.paymentDeadline = undefined;
 
   await booking.save();

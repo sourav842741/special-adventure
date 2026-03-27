@@ -22,6 +22,12 @@ export async function POST(
   booking.status = "completed";
   booking.completedAt = new Date();
 
+  if (booking.partnerAmount === 0 && booking.fare > 0) {
+    const adminCommission = booking.fare * 0.10;
+    booking.adminCommission = adminCommission;
+    booking.partnerAmount = booking.fare - adminCommission;
+  }
+
   await booking.save();
 
   return NextResponse.json({ success: true });

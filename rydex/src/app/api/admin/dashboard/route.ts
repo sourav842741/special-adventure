@@ -4,6 +4,7 @@ import connectDb from "@/lib/db";
 
 import User from "@/models/user.model";
 import Vehicle from "@/models/vehicle.model";
+import Booking from "@/models/booking.model";
 
 /* ================================
    GET → ADMIN DASHBOARD DATA
@@ -108,6 +109,40 @@ export async function GET() {
     );
 
     /* ================================
+       EARNINGS - LAST 7 DAYS
+    ================================ */
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const earningsBookings = await Booking.find({
+      status: "completed",
+      paymentStatus: { $in: ["paid", "cash"] },
+      createdAt: { $gte: sevenDaysAgo }
+    }).select("adminCommission createdAt").lean();
+
+    const earningsMap: Record<string, number> = {};
+
+    earningsBookings.forEach((b: any) => {
+      const date = new Date(b.createdAt).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+      });
+
+      if (!earningsMap[date]) {
+        earningsMap[date] = 0;
+      }
+
+      earningsMap[date] += b.adminCommission || 0;
+    });
+
+    const earnings = Object.entries(earningsMap).map(([date, amount]) => ({
+      date,
+      amount
+    }));
+
+    const totalEarnings = earningsBookings.reduce((sum: number, b: any) => sum + (b.adminCommission || 0), 0);
+
+    /* ================================
        RESPONSE
     ================================ */
 
@@ -121,6 +156,8 @@ export async function GET() {
       },
       pendingVendors,
       pendingVehicles,
+      earnings,
+      totalEarnings
     });
   } catch (error) {
     console.error("ADMIN DASHBOARD ERROR:", error);

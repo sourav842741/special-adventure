@@ -43,6 +43,13 @@ export async function POST(req: Request) {
     /* update status */
 
     booking.status = "completed";
+    booking.completedAt = new Date();
+
+    if (booking.partnerAmount === 0 && booking.fare > 0) {
+      const adminCommission = booking.fare * 0.10;
+      booking.adminCommission = adminCommission;
+      booking.partnerAmount = booking.fare - adminCommission;
+    }
 
     booking.dropOtp = "";
     booking.dropOtpExpires = undefined as any;

@@ -23,7 +23,8 @@ export async function GET() {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const bookings = await Booking.find({
-      paymentStatus: "paid",
+      status: "completed",
+      paymentStatus: { $in: ["paid", "cash"] },
       createdAt: { $gte: sevenDaysAgo }
     }).select("adminCommission createdAt");
 
